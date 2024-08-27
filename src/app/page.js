@@ -3,21 +3,27 @@ import { clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 
 export default async function Home() {
-  //get all data from posts
+  //get all data from posts database view
   const result = await db.query(`SELECT * FROM all_data`);
+  //parse result rows
   const posts = result.rows;
   // get user info by user_id in post
   const getUsers = async () => {
+    //end result await all in promis
     const postsWithUsers = await Promise.all(
+      //map the return from the database set userId as post.user_id from each post
       posts.map(async (post) => {
         const userId = post.user_id;
+        //get the user data from clerkClient
         const response = await clerkClient.users.getUser(userId);
+        //de construct each post object and and the user responce to it post.user is now an object returned by clerk where the user matches the user_id in posts
         return { ...post, user: response };
       })
     );
+    //make the return of everything be postsdata with users data
     return postsWithUsers;
   };
-
+  //make sure postswithusers awaits the result from the get user function
   const postsWithUsers = await getUsers();
 
   return (
